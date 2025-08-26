@@ -4,10 +4,16 @@ import statsapi
 from ai.models.players import Player
 from ai.models.player_stats import PlayerStatistics
 from ai.utils.util import outfield_postion_set, pitcher_position_set, hitter_position_set, all_position_set
-from ai.data.database import read_player_pool, write_player_pool
+from ai.data.sqlite.database import read_player_pool, write_player_pool
+from ai.data.postgresql.main import read_postgres_player_pool, write_postgres_player_pool
 from uuid import uuid4
 import uuid
-import random
+import os
+
+if os.getenv("DEPLOYMENT_ENVIRONMENT") == 'DEV':
+    use_local_db = True
+else: 
+    use_local_db = False
 
 class PlayerPool(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
@@ -17,11 +23,17 @@ class PlayerPool(BaseModel):
     async def get(cls, id: Optional[str]):
         if id is None:
             id=str(uuid.uuid4()).lower()
-        fields = read_player_pool(id.lower())
+        if use_local_db:
+            fields = read_player_pool(id.lower())
+        else:
+            fields = read_postgres_player_pool(id.lower())
         if not fields:
             player_pool = await initialize_player_pool(id=id.lower())
             fields = player_pool.model_dump(by_alias=True)
-            write_player_pool(id.lower(), fields)
+            if use_local_db:
+                write_player_pool(id.lower(), fields)
+            else:
+                write_postgres_player_pool(id.lower(), fields)
         return cls(**fields)
     
     def get_undrafted_players_dict(self) -> List[dict[str, Any]]:
@@ -40,7 +52,10 @@ class PlayerPool(BaseModel):
 
     def save(self):
         data = self.model_dump(by_alias=True)
-        write_player_pool(self.id, data)
+        if use_local_db:
+            write_player_pool(self.id, data)
+        else:
+            write_postgres_player_pool(self.id, data)
 
 async def initialize_player_pool(id: str) -> PlayerPool:
 

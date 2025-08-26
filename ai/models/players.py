@@ -1,6 +1,13 @@
 from pydantic import BaseModel, Field
 from ai.models.player_stats import PlayerStatistics
-from ai.data.database import read_player, write_player
+from ai.data.sqlite.database import read_player, write_player
+from ai.data.postgresql.main import read_postgres_player, write_postgres_player
+import os
+
+if os.getenv("DEPLOYMENT_ENVIRONMENT") == 'DEV':
+    use_local_db = True
+else: 
+    use_local_db = False
 
 class Player(BaseModel):
     id: int = Field(description="Id of the player")
@@ -26,7 +33,10 @@ class Player(BaseModel):
     
     @classmethod
     def get(cls, id: int):
-        fields = read_player(id)
+        if use_local_db:
+            fields = read_player(id)
+        else:
+            fields = read_postgres_player(id.lower())
         if not fields:
             fields = {
                 "id": id,
@@ -36,12 +46,18 @@ class Player(BaseModel):
                 "stats": {},
                 "is_drafted": False
             }
-            write_player(id, fields)
+            if use_local_db:
+                write_player(id, fields)
+            else:
+                write_postgres_player(id, fields)
         return cls.from_dict(fields)
     
     def save(self):
         data = self.model_dump(by_alias=True)
-        write_player(self.id, data)
+        if use_local_db:
+            write_player(self.id, data)
+        else:
+            write_postgres_player(self.id, data)
 
     def mark_drafted(self):
         self.is_drafted = True

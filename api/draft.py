@@ -3,13 +3,19 @@ from pydantic import BaseModel as PydanticBaseModel
 from ai.models.draft import Draft
 from ai.models.draft_history import DraftHistory
 from ai.models.player_pool import PlayerPool
-from ai.data.database import read_drafts
+from ai.data.sqlite.database import read_drafts
+from ai.data.postgresql.main import read_postgres_drafts
 import logging
 from typing import List, Dict, Optional
 from ai.models.draft_teams import DraftTeams
 import json
 from fastapi import APIRouter
 import os
+
+if os.getenv("DEPLOYMENT_ENVIRONMENT") == 'DEV':
+    use_local_db = True
+else: 
+    use_local_db = False
 
 router = APIRouter()
 
@@ -293,7 +299,10 @@ async def select_player(draft_id: str, team_name: str, round: int, pick: int):
 
 @router.get("/drafts", response_model=List[DraftsResponse])
 async def get_drafts():
-    drafts = read_drafts()
+    if use_local_db:
+        drafts = read_drafts()
+    else:
+         drafts = read_postgres_drafts()
     if not drafts:
         raise HTTPException(status_code=404, detail="No drafts found")
     

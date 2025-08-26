@@ -4,7 +4,8 @@ import traceback
 from typing import List, Optional, Dict, Self, Tuple
 import json
 import logging
-from ai.data.database import write_draft, read_draft
+from ai.data.sqlite.database import write_draft, read_draft
+from ai.data.postgresql.main import write_postgres_draft, read_postgres_draft
 from ai.models.players import Player
 from ai.models.teams import Team
 from ai.models.draft_history import DraftHistory
@@ -18,6 +19,12 @@ from ai.templates.templates import draft_name_generator_message
 from agents import Runner
 import uuid
 import math
+import os
+
+if os.getenv("DEPLOYMENT_ENVIRONMENT") == 'DEV':
+    use_local_db = True
+else: 
+    use_local_db = False
 
 class Draft(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
@@ -61,7 +68,10 @@ class Draft(BaseModel):
 
         import ast
         import json
-        fields = read_draft(id.lower())
+        if use_local_db:
+            fields = read_draft(id.lower())
+        else:
+            fields = read_postgres_draft(id.lower())
         if not fields:
 
             teams = await DraftTeams.get(id.lower(), NO_OF_TEAMS)
@@ -76,7 +86,10 @@ class Draft(BaseModel):
                 "current_pick": 1,
                 "is_complete": False
             }
-            write_draft(id.lower(), fields)
+            if use_local_db:
+                write_draft(id.lower(), fields)
+            else:
+                write_postgres_draft(id.lower(), fields)
             await DraftHistory.get(id.lower())
         return cls(**fields)
 
@@ -110,7 +123,10 @@ class Draft(BaseModel):
     
     def save(self):
         data = self.model_dump(by_alias=True)
-        write_draft(self.id.lower(), data)
+        if use_local_db:
+            write_draft(self.id.lower(), data)
+        else:
+            write_postgres_draft(self.id.lower(), data)
 
     def report(self) -> str:
         """ Return a json string representing the draft.  """

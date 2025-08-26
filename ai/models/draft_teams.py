@@ -1,7 +1,8 @@
 from typing import List
 from ai.models.teams import Team
 from ai.utils.util import Position
-from ai.data.database import read_draft_teams, write_draft_teams
+from ai.data.sqlite.database import read_draft_teams, write_draft_teams
+from ai.data.postgresql.main import read_postgres_draft_teams, write_postgres_draft_teams
 from ai.utils.util import  draft_strategy_set
 from pydantic import BaseModel, Field
 from ai.templates.templates import team_name_generator_message
@@ -9,7 +10,12 @@ from ai.team_name_generator.team_name_generator_agent import get_team_name_gener
 from ai.team_name_generator.team_name_data import TeamNameData
 from agents import Runner
 import random
-import json
+import os
+
+if os.getenv("DEPLOYMENT_ENVIRONMENT") == 'DEV':
+    use_local_db = True
+else: 
+    use_local_db = False
 
 class DraftTeams(BaseModel):
     draft_id: str = Field(description="Id of the draft.")
@@ -18,7 +24,10 @@ class DraftTeams(BaseModel):
     @classmethod
     async def get(cls, id: str, num_teams):
         import ast
-        fields = read_draft_teams(id.lower())
+        if use_local_db:
+            fields = read_draft_teams(id.lower())
+        else:
+            fields = read_postgres_draft_teams(id.lower())
         if not fields:
             print(f"Initializing teams in DraftTeams model...")
             teams = await initialize_teams(num_teams)
@@ -26,7 +35,10 @@ class DraftTeams(BaseModel):
                 "draft_id": id.lower(),
                 "teams": [team.model_dump(by_alias=True) if hasattr(team, 'model_dump') else team for team in teams],
             }
-            write_draft_teams(id.lower(), fields)
+            if use_local_db:
+                write_draft_teams(id.lower(), fields)
+            else:
+                write_postgres_draft_teams(id.lower(), fields)
         # Ensure teams are Team objects, not dicts or strings
         if fields and isinstance(fields.get("teams", None), list):
             from ai.models.teams import Team
@@ -54,7 +66,10 @@ class DraftTeams(BaseModel):
     
     def save(self):
         data = self.model_dump(by_alias=True)
-        write_draft_teams(self.name.lower(), data)
+        if use_local_db:
+            write_draft_teams(self.name.lower(), data)
+        else:
+            write_postgres_draft_teams(self.name.lower(), data)
     
 async def initialize_teams( num_of_teams: int) -> List[Team]:
 

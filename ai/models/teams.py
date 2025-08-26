@@ -3,7 +3,8 @@ import json
 from pydantic import BaseModel, Field
 from ai.utils.util import Position, NO_OF_TEAMS, NO_OF_ROUNDS
 from ai.models.players import Player
-from ai.data.database import write_team, read_team
+from ai.data.sqlite.database import write_team, read_team
+from ai.data.postgresql.main import write_postgres_team, read_postgres_team
 from agents import Agent,  Runner, trace
 from contextlib import AsyncExitStack
 from agents.mcp import MCPServerStdio
@@ -12,8 +13,13 @@ from ai.templates.templates import  team_instructions,  team_message, team_input
 from ai.client.draft_client import get_draft_tools, read_team_roster_resource, read_draft_player_pool_available_resource
 from ai.research_agents.researcher_tool import get_researcher_tool, get_researcher
 import math
+import os
 
 MAX_TURNS = 15
+if os.getenv("DEPLOYMENT_ENVIRONMENT") == 'DEV':
+    use_local_db = True
+else: 
+    use_local_db = False
 
 class TeamContext(BaseModel):
     draft_id: str
@@ -48,7 +54,10 @@ class Team(BaseModel):
 
     @classmethod
     def get(cls, name: str):
-        fields = read_team(name.lower())
+        if use_local_db:
+            fields = read_team(name.lower())
+        else: 
+            fields = read_postgres_team(name.lower())
         if not fields:
             fields = {
                 "name": name.lower(),
@@ -56,7 +65,10 @@ class Team(BaseModel):
                 "roster": {},
                 "drafted_players": []
             }
-            write_team(name, fields)
+            if use_local_db:
+                write_team(name, fields)
+            else:
+                write_postgres_team(name, fields)
         return cls.from_dict(fields)
 
     def get_needed_positions(self) -> set:
@@ -66,7 +78,10 @@ class Team(BaseModel):
         return self.strategy
     
     def save(self):
-        write_team(self.name.lower(), self.to_dict())
+        if use_local_db:
+            write_team(self.name.lower(), self.to_dict())
+        else:
+            write_postgres_team(self.name.lower(), self.to_dict())
 
     
     def get_roster(self) -> Dict[str, Optional[Player]]:

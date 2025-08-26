@@ -1,7 +1,14 @@
 from typing import List
 from ai.models.players import Player
-from ai.data.database import read_draft_history, write_draft_history
+from ai.data.sqlite.database import read_draft_history, write_draft_history
+from ai.data.postgresql.main import read_postgres_draft_history, write_postgres_draft_history
 from pydantic import BaseModel, Field
+import os
+
+if os.getenv("DEPLOYMENT_ENVIRONMENT") == 'DEV':
+    use_local_db = True
+else: 
+    use_local_db = False
 
 class DraftHistoryItem(BaseModel):
     round: int
@@ -16,7 +23,10 @@ class DraftHistory(BaseModel):
 
     @classmethod
     async def get(cls, id: str):
-        fields = read_draft_history(id.lower())
+        if use_local_db:
+            fields = read_draft_history(id.lower())
+        else:
+            fields = read_postgres_draft_history(id.lower())
         if not fields:
             from ai.models.draft import Draft
             items = await initialize_draft_history_items(id.lower())
@@ -24,7 +34,10 @@ class DraftHistory(BaseModel):
                 "draft_id": id.lower(),
                 "items": [item.model_dump(by_alias=True) if hasattr(item, 'model_dump') else item for item in items]
             }
-            write_draft_history(id, fields)
+            if use_local_db:
+                write_draft_history(id, fields)
+            else:
+                write_postgres_draft_history(id, fields)
         return cls(**fields)
 
     def update_draft_history(self, round: int, pick: int, selection: Player, rationale: str):
@@ -38,7 +51,10 @@ class DraftHistory(BaseModel):
     
     def save(self):
         data = self.model_dump(by_alias=True)
-        write_draft_history(self.draft_id.lower(), data)
+        if use_local_db:
+            write_draft_history(self.draft_id.lower(), data)
+        else:
+            write_postgres_draft_history(self.draft_id.lower(), data)
 
 
 async def initialize_draft_history_items(id: str) -> List[DraftHistoryItem]:
