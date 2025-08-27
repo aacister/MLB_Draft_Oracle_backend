@@ -12,6 +12,7 @@ import json
 from fastapi import APIRouter
 import os
 
+api_url = os.getenv("API_URL")
 if os.getenv("DEPLOYMENT_ENVIRONMENT") == 'DEV':
     use_local_db = True
 else: 
@@ -67,7 +68,7 @@ class DraftsResponse(PydanticBaseModel):
 
     
 
-@router.get("/draft", response_model=DraftResponse )
+@router.get('/draft', response_model=DraftResponse )
 async def get_draft():
     print("Current working directory:", os.getcwd())
     try:

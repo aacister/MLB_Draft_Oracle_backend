@@ -3,6 +3,9 @@ from typing import List
 from pydantic import BaseModel as PydanticBaseModel
 from ai.models.draft_history import DraftHistory, DraftHistoryItem
 from fastapi import APIRouter
+import os
+
+api_url = os.getenv("API_URL")
 
 router = APIRouter()
 
@@ -21,7 +24,7 @@ class DraftHistoryResponse(PydanticBaseModel):
     items: List[DraftHistoryItemResponse]
 
 
-@router.get("/draft-history/{draft_id}", response_model=DraftHistoryResponse)
+@router.get('/draft-history/{draft_id}', response_model=DraftHistoryResponse)
 async def get_draft_history(draft_id: str):
     draft_history = await DraftHistory.get(draft_id.lower())
     if not draft_history:

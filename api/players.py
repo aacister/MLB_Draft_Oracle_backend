@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel as PydanticBaseModel
 from ai.models.players import Player
 from fastapi import APIRouter
+import os
 
+api_url = os.getenv("API_URL")
 router = APIRouter()
 
 class PlayerResponse(PydanticBaseModel):

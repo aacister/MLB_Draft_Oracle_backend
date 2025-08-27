@@ -4,7 +4,9 @@ from pydantic import BaseModel as PydanticBaseModel
 from ai.models.draft import Draft
 from ai.models.teams import Team
 from fastapi import APIRouter
+import os
 
+api_url = os.getenv("API_URL")
 router = APIRouter()
 class TeamResponse(PydanticBaseModel):
     name: str
@@ -16,7 +18,7 @@ class TeamResponse(PydanticBaseModel):
 
 
 
-@router.get("/drafts/{draft_id}/teams/{team_name}", response_model=TeamResponse)
+@router.get("$/drafts/{draft_id}/teams/{team_name}", response_model=TeamResponse)
 async def get_team(draft_id: str, team_name: str):
     draft = await Draft.get(draft_id.lower())
     if not draft:

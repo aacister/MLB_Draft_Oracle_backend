@@ -4,6 +4,9 @@ from pydantic import BaseModel as PydanticBaseModel
 from ai.models.player_pool import PlayerPool
 from fastapi import APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+import os
+
+api_url = os.getenv("API_URL")
 
 router = APIRouter()
 
