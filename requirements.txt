@@ -15,3 +15,4 @@ requests
 types-requests
 typing_extensions==4.15.0
 openai-agents==0.2.10
+psycopg2-binary
