@@ -66,8 +66,13 @@ def read_postgres_draft(id: str) -> dict | None:
 
 
 def read_postgres_drafts() -> list[dict | None]:
-    rows = session.query(Draft).all()
-    return [json.loads(row[0]) for row in rows if row[0]]
+    result_list = []
+    drafts = session.query(Draft).all()
+    for draft in drafts:
+        draft_json = json.loads(draft.data)
+        result_list.append(draft_json)
+    return result_list
+    #return [json.loads(row[0]) for row in rows if row[0]]
     
     
 def write_postgres_draft_teams(id, draft_teams_dict):
