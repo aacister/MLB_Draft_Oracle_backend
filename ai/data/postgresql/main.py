@@ -7,8 +7,6 @@ import json
 session = SessionLocal()
 
 def write_postgres_team(name, team_dict):
-
-    pk_constraint_name = insp.get_pk_constraint(Team.__tablename__)["name"]
     json_data = json.dumps(team_dict)
     insert_stmt = insert(Team).values(name=name, data=json_data)
     do_update_stmt = insert_stmt.on_conflict_do_update(
