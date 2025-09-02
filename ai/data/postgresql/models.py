@@ -30,7 +30,7 @@ class Draft(Base):
 
 class Player(Base):
     __tablename__ = 'players'
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     data = Column(JSONB) 
 
 class PlayerPool(Base):

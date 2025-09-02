@@ -36,7 +36,7 @@ class Player(BaseModel):
         if use_local_db:
             fields = read_player(id)
         else:
-            fields = read_postgres_player(id.lower())
+            fields = read_postgres_player(id)
         if not fields:
             fields = {
                 "id": id,

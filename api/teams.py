@@ -18,7 +18,7 @@ class TeamResponse(PydanticBaseModel):
 
 
 
-@router.get("$/drafts/{draft_id}/teams/{team_name}", response_model=TeamResponse)
+@router.get("/drafts/{draft_id}/teams/{team_name}", response_model=TeamResponse)
 async def get_team(draft_id: str, team_name: str):
     draft = await Draft.get(draft_id.lower())
     if not draft:

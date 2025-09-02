@@ -47,7 +47,9 @@ def write_postgres_player(id, player_dict):
     session.commit()
 
 def read_postgres_player(id):
-    retrieved_item = session.query(Player).filter_by(id=id).first()
+    #retrieved_item = session.query(Player).filter_by(id=id).first()
+    retrieved_item = session.query(Player).filter(Player.id == str(id)).one()
+    print(f"Retrieved player: {retrieved_item}")
     return json.loads(retrieved_item.data) if retrieved_item else None
 
 
