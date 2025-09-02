@@ -9,11 +9,11 @@ SQLAlchemy==2.0.43
 uvicorn
 griffe
 mcp
-openai
 pydantic
 requests
 types-requests
 typing_extensions==4.15.0
-openai-agents==0.2.10
 psycopg2-binary
 uv
+openai==1.85.0
+openai-agents==0.0.17
