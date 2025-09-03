@@ -21,7 +21,7 @@ researcher_mcp_server_params = [
 drafter_mcp_server_params = [
     {
         "command": "uv",
-        "args": ["run", "draft_server.py"]
+        "args": ["run", "push_server.py"]
     }
 ]
 
