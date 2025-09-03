@@ -121,8 +121,8 @@ class Team(BaseModel):
         if draft.is_complete:
             return "Draft is complete"
         with trace(f"{self.name}-drafting Round: {round} Pick: {pick}"):
-            #await self.research_test()
-            
+            await self.research_test()
+            '''
             async with AsyncExitStack() as stack:
                 drafter_mcp_servers = [await stack.enter_async_context(MCPServerStdio(params=params, cache_tools_list=False)) for params in drafter_mcp_server_params]
                 if not drafter_mcp_servers:
@@ -177,7 +177,7 @@ class Team(BaseModel):
                     
                   
                     return str(drafter_result.final_output)
-              
+            '''
     def to_dict(self):
         return {
             'name': self.name,
