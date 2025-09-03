@@ -16,6 +16,17 @@ researcher_mcp_server_params = [
     {"command": "npx", "args": ["-y", "@modelcontextprotocol/server-brave-search"], "env": brave_env}
 		
 ]
+
+
+drafter_mcp_server_params = [
+    {
+        "command": "uv",
+        "args": ["run", "draft_server.py"]
+    }
+]
+
+
+'''
 drafter_mcp_server_params = [
     {
         "command": "uv",
@@ -28,3 +39,4 @@ drafter_mcp_server_params = [
         "working_directory": server_directory
     }
 ]
+'''
